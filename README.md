@@ -40,8 +40,8 @@ Con esos datos se entrena un clasificador clásico (k-NN, SVM o similar), que se
 
 ## Alcance
 
-- **Núcleo:** las letras **estáticas** del alfabeto.
-- **Fuera de alcance:** las letras que requieren movimiento (por ejemplo, la Ñ es la N con movimiento).
+- **Núcleo:** las 25 letras **estáticas** del alfabeto: A, B, C, CH, D, E, F, G, H, I, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y.
+- **Fuera de alcance:** las 5 letras que requieren movimiento: J, LL, Ñ, RR y Z.
 - **Investigación:** comparar distintos clasificadores y formas de representar la mano, y analizar qué letras se confunden entre sí y cómo funciona con personas distintas a las del entrenamiento.
 
 ## Tecnologías
