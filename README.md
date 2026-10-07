@@ -41,7 +41,7 @@ Con esos datos se entrena un clasificador clásico (k-NN, SVM o similar), que se
 ## Alcance
 
 - **Núcleo:** las letras **estáticas** del alfabeto.
-- **Ampliación posible:** las letras que requieren movimiento (por ejemplo, la Ñ es la N con movimiento).
+- **Fuera de alcance:** las letras que requieren movimiento (por ejemplo, la Ñ es la N con movimiento).
 - **Investigación:** comparar distintos clasificadores y formas de representar la mano, y analizar qué letras se confunden entre sí y cómo funciona con personas distintas a las del entrenamiento.
 
 ## Tecnologías
@@ -51,3 +51,23 @@ Con esos datos se entrena un clasificador clásico (k-NN, SVM o similar), que se
 - **MediaPipe** (Tasks API, `HandLandmarker`) — detección de los puntos de la mano
 - **NumPy / pandas** — normalización y datos
 - **scikit-learn** — clasificadores y métricas
+- **matplotlib** — gráficas de resultados
+- **uv** — entorno y dependencias · **ruff** — linter y formato · **pytest** — tests
+
+## Instalación
+
+Requiere [uv](https://docs.astral.sh/uv/), que instala por sí mismo la versión de Python adecuada.
+
+```bash
+uv sync                              # crea el entorno e instala las dependencias
+uv run scripts/download_model.py     # descarga el modelo de MediaPipe a models/
+uv run scripts/check_setup.py        # comprueba librerías, modelo y webcam
+```
+
+## Desarrollo
+
+```bash
+uv run ruff check .      # linter
+uv run ruff format .     # formato
+uv run pytest            # tests
+```
