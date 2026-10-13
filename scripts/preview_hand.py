@@ -1,4 +1,7 @@
-"""Muestra la webcam con el esqueleto de la mano. Salir con q, Esc o cerrando la ventana."""
+"""Muestra la webcam con el esqueleto de la mano y la punta del índice normalizada.
+
+Salir con q, Esc o cerrando la ventana.
+"""
 
 import cv2
 
@@ -6,10 +9,12 @@ from dactilograph.camera import Camera
 from dactilograph.drawing import draw_hand
 from dactilograph.fps import FpsCounter
 from dactilograph.hand_detector import HandDetector
+from dactilograph.normalization import normalize_hand
 
 WINDOW_NAME = "Dactilograph"
 QUIT_KEYS = {ord("q"), 27}
 TEXT_COLOR = (0, 255, 0)
+INDEX_FINGER_TIP = 8
 
 
 def main() -> None:
@@ -24,6 +29,16 @@ def main() -> None:
             hand = detector.detect(frame)
             if hand is not None:
                 draw_hand(frame, hand)
+                x, y, z = normalize_hand(hand).reshape(21, 3)[INDEX_FINGER_TIP]
+                cv2.putText(
+                    frame,
+                    f"Indice: x={x:+.2f} y={y:+.2f} z={z:+.2f}",
+                    (10, 60),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.6,
+                    TEXT_COLOR,
+                    2,
+                )
 
             fps = fps_counter.tick()
             cv2.putText(
