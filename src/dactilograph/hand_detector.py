@@ -18,10 +18,13 @@ MIRRORED_HANDEDNESS = {"Left": "Right", "Right": "Left"}
 class Hand:
     # landmarks: x e y relativos al tamaño de la imagen (0 a 1); z, profundidad respecto a la
     # muñeca en la misma escala que x. world_landmarks: en metros, centrados en la mano.
+    # image_width e image_height: tamaño en píxeles del fotograma donde se detectó.
     landmarks: np.ndarray
     world_landmarks: np.ndarray
     handedness: str
     handedness_score: float
+    image_width: int
+    image_height: int
 
 
 class HandDetector:
@@ -51,6 +54,8 @@ class HandDetector:
             world_landmarks=np.array([[p.x, p.y, p.z] for p in result.hand_world_landmarks[0]]),
             handedness=MIRRORED_HANDEDNESS[handedness.category_name],
             handedness_score=handedness.score,
+            image_width=frame_bgr.shape[1],
+            image_height=frame_bgr.shape[0],
         )
 
     def _next_timestamp_ms(self) -> int:
