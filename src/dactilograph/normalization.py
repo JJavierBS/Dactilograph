@@ -23,13 +23,17 @@ def center_on_wrist(points: np.ndarray, hand: Hand) -> np.ndarray:
     return points - points[WRIST]
 
 
-def scale_by_palm_size(points: np.ndarray, hand: Hand) -> np.ndarray:
+def palm_size(points: np.ndarray) -> float:
     # La palma mide lo mismo con el puño cerrado que con la mano abierta, así que no depende de la
     # letra que se esté haciendo.
-    palm_size = np.linalg.norm(points[MIDDLE_FINGER_MCP] - points[WRIST])
-    if palm_size < MIN_PALM_SIZE:
+    size = float(np.linalg.norm(points[MIDDLE_FINGER_MCP] - points[WRIST]))
+    if size < MIN_PALM_SIZE:
         raise ValueError("The hand has zero size and cannot be normalized")
-    return points / palm_size
+    return size
+
+
+def scale_by_palm_size(points: np.ndarray, hand: Hand) -> np.ndarray:
+    return points / palm_size(points)
 
 
 def mirror_left_hand(points: np.ndarray, hand: Hand) -> np.ndarray:
