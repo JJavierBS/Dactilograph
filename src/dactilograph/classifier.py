@@ -1,12 +1,14 @@
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
 import joblib
 import numpy as np
 
+from dactilograph.dynamic_features import sequence_features
 from dactilograph.hand_detector import Hand
 from dactilograph.normalization import normalize_hand
-from dactilograph.paths import CLASSIFIER_PATH
+from dactilograph.paths import CLASSIFIER_PATH, DYNAMIC_CLASSIFIER_PATH
 
 
 @dataclass(frozen=True)
@@ -29,3 +31,15 @@ class LetterClassifier:
         return Prediction(
             letter=str(self._model.classes_[best]), confidence=float(probabilities[best])
         )
+
+
+class DynamicLetterClassifier:
+    def __init__(self, model_path: Path = DYNAMIC_CLASSIFIER_PATH) -> None:
+        if not model_path.exists():
+            raise FileNotFoundError(
+                f"Dynamic classifier not found at {model_path}. Run: uv run scripts/train_dynamic.py"
+            )
+        self._model = joblib.load(model_path)
+
+    def predict(self, hands: Sequence[Hand], timestamps_ms: Sequence[float]) -> str:
+        return str(self._model.predict([sequence_features(hands, timestamps_ms)])[0])

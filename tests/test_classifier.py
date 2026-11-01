@@ -3,7 +3,8 @@ import numpy as np
 import pytest
 from sklearn.neighbors import KNeighborsClassifier
 
-from dactilograph.classifier import LetterClassifier
+from dactilograph.classifier import DynamicLetterClassifier, LetterClassifier
+from dactilograph.dynamic_features import sequence_features
 from dactilograph.hand_detector import Hand
 from dactilograph.normalization import normalize_hand
 
@@ -31,3 +32,21 @@ def test_predicts_the_letter_of_the_closest_training_hand(tmp_path):
 def test_missing_model_explains_how_to_create_it(tmp_path):
     with pytest.raises(FileNotFoundError, match="train.py"):
         LetterClassifier(tmp_path / "missing.joblib")
+
+
+def test_dynamic_classifier_predicts_from_a_sequence(tmp_path):
+    still = [make_hand(0.1)] * 3
+    moving = [make_hand(0.1 * step) for step in range(3)]
+    timestamps = [0, 33, 66]
+    model = KNeighborsClassifier(n_neighbors=1).fit(
+        [sequence_features(still, timestamps), sequence_features(moving, timestamps)], ["-", "Z"]
+    )
+    path = tmp_path / "dynamic.joblib"
+    joblib.dump(model, path)
+
+    assert DynamicLetterClassifier(path).predict(moving, timestamps) == "Z"
+
+
+def test_missing_dynamic_model_explains_how_to_create_it(tmp_path):
+    with pytest.raises(FileNotFoundError, match="train_dynamic.py"):
+        DynamicLetterClassifier(tmp_path / "missing.joblib")

@@ -20,7 +20,7 @@ FEATURE_COLUMNS = [f"{axis}{point}" for point in range(NUM_LANDMARKS) for axis i
 COLUMNS = ["persona", "letra", *FEATURE_COLUMNS]
 DEFAULT_DATASET_PATH = DATA_DIR / "landmarks.csv"
 
-DYNAMIC_LETTERS = ("J", "LL", "Ñ", "RR", "Z")
+DYNAMIC_LETTERS = ("J", "LL", "Ñ", "RR", "V", "W", "X", "Y", "Z")
 # Clase negativa: mano quieta, transiciones entre letras o movimientos que no son ninguna letra.
 NO_DYNAMIC_LETTER = "-"
 SEQUENCE_LABELS = (*DYNAMIC_LETTERS, NO_DYNAMIC_LETTER)

@@ -1,10 +1,13 @@
 """Reconoce en tiempo real la letra que hace la mano. Salir con q, Esc o cerrando la ventana."""
 
+import time
+
 import cv2
 
 from dactilograph.camera import Camera
-from dactilograph.classifier import LetterClassifier
+from dactilograph.classifier import DynamicLetterClassifier, LetterClassifier
 from dactilograph.drawing import draw_hand
+from dactilograph.dynamic_recognizer import DynamicRecognizer
 from dactilograph.fps import FpsCounter
 from dactilograph.hand_detector import HandDetector
 
@@ -14,11 +17,18 @@ MIN_CONFIDENCE = 0.6
 CONFIDENT_COLOR = (0, 255, 0)
 UNSURE_COLOR = (0, 165, 255)
 TEXT_COLOR = (255, 255, 255)
+DYNAMIC_COLOR = (255, 0, 255)
+DYNAMIC_DISPLAY_S = 1.5
+# cv2.putText solo dibuja ASCII.
+DISPLAY_NAMES = {"Ñ": "N~"}
 
 
 def main() -> None:
     classifier = LetterClassifier()
+    dynamic_recognizer = DynamicRecognizer(DynamicLetterClassifier().predict)
     fps_counter = FpsCounter()
+    dynamic_letter = ""
+    dynamic_shown_until = 0.0
     with Camera() as camera, HandDetector() as detector:
         while True:
             frame = camera.read()
@@ -26,9 +36,21 @@ def main() -> None:
                 print("Could not read a frame from the camera")
                 break
 
+            now = time.monotonic()
+
             hand = detector.detect(frame)
+            recognized = dynamic_recognizer.update(now * 1000, hand)
+            if recognized is not None:
+                dynamic_letter = DISPLAY_NAMES.get(recognized, recognized)
+                dynamic_shown_until = now + DYNAMIC_DISPLAY_S
+
             if hand is not None:
                 draw_hand(frame, hand)
+            if now < dynamic_shown_until:
+                cv2.putText(
+                    frame, dynamic_letter, (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 3, DYNAMIC_COLOR, 6
+                )
+            elif hand is not None:
                 prediction = classifier.predict(hand)
                 color = CONFIDENT_COLOR if prediction.confidence >= MIN_CONFIDENCE else UNSURE_COLOR
                 cv2.putText(
