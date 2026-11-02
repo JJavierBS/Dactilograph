@@ -12,14 +12,25 @@ import joblib
 import numpy as np
 import pandas as pd
 from sklearn.base import ClassifierMixin
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
-from sklearn.model_selection import StratifiedGroupKFold, cross_val_predict
+from sklearn.metrics import (
+    classification_report,
+    confusion_matrix,
+    f1_score,
+    recall_score,
+)
+from sklearn.model_selection import StratifiedGroupKFold
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 
+from dactilograph.augmentation import (
+    augment_sequence,
+    cross_val_predict_both,
+    with_copies,
+)
 from dactilograph.dataset import (
     DEFAULT_DATASET_PATH,
     DEFAULT_SEQUENCES_PATH,
+    NO_DYNAMIC_LETTER,
     SEQUENCE_LABELS,
     iter_sequences,
     load_dataset,
@@ -32,6 +43,9 @@ from dactilograph.static_negatives import negatives_from_static
 MAX_FOLDS = 5
 TOP_CONFUSIONS = 10
 SEED = 0
+DEFAULT_COPIES = 5
+AUGMENTED_SUFFIX = " + aumento afín"
+MIN_NEGATIVE_RECALL = 0.9
 
 
 def candidates() -> dict[str, ClassifierMixin]:
@@ -57,7 +71,21 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--salida", type=Path, default=DYNAMIC_CLASSIFIER_PATH, help="modelo a guardar"
     )
+    parser.add_argument(
+        "--copias",
+        type=int,
+        default=DEFAULT_COPIES,
+        help="copias por secuencia con transformaciones afines (0 para no comparar con aumento)",
+    )
     return parser.parse_args()
+
+
+def negative_recall(labels: np.ndarray, predicted: np.ndarray) -> float:
+    return recall_score(labels, predicted, labels=[NO_DYNAMIC_LETTER], average="macro")
+
+
+def macro_f1(labels: np.ndarray, predicted: np.ndarray) -> float:
+    return f1_score(labels, predicted, average="macro", zero_division=0)
 
 
 def print_top_confusions(true_labels: np.ndarray, predicted: np.ndarray) -> None:
@@ -73,6 +101,8 @@ def print_top_confusions(true_labels: np.ndarray, predicted: np.ndarray) -> None
 
 def main() -> None:
     args = parse_args()
+    if args.copias < 0:
+        raise SystemExit("--copias cannot be negative")
     recorded = list(iter_sequences(load_sequences(args.secuencias)))
     negatives = negatives_from_static(load_dataset(args.estaticas))
     sequences = recorded + negatives
@@ -92,17 +122,62 @@ def main() -> None:
     # Cada secuencia va entera a un solo pliegue: se prueba siempre con secuencias no vistas.
     by_sequence = StratifiedGroupKFold(n_splits=n_folds, shuffle=True, random_state=SEED)
 
+    rng = np.random.default_rng(SEED)
+    copies = np.array(
+        [
+            [
+                sequence_features(augment_sequence(seq.hands, rng), seq.timestamps_ms)
+                for _ in range(args.copias)
+            ]
+            for seq in sequences
+        ]
+    )
+
+    transformed = np.array(
+        [
+            sequence_features(augment_sequence(seq.hands, rng), seq.timestamps_ms)
+            for seq in sequences
+        ]
+    )
+
+    splits = list(by_sequence.split(features, labels, groups))
     results = {}
     for name, model in candidates().items():
-        results[name] = cross_val_predict(model, features, labels, groups=groups, cv=by_sequence)
-        print(f"\n{name}: {accuracy_score(labels, results[name]):.1%} con secuencias no vistas")
+        results[name] = cross_val_predict_both(model, features, labels, transformed, splits)
+        if args.copias:
+            results[name + AUGMENTED_SUFFIX] = cross_val_predict_both(
+                model, features, labels, transformed, splits, copies
+            )
 
-    best_name = max(results, key=lambda name: accuracy_score(labels, results[name]))
+    print("\nCon secuencias no vistas (tal cual / con transformaciones afines):")
+    for name, (on_original, on_transformed) in results.items():
+        print(
+            f"  {name}: F1 medio {macro_f1(labels, on_original):.3f} / "
+            f"{macro_f1(labels, on_transformed):.3f}, negativos bien "
+            f"{negative_recall(labels, on_original):.1%} / "
+            f"{negative_recall(labels, on_transformed):.1%}"
+        )
+
+    usable = [
+        name
+        for name in results
+        if all(negative_recall(labels, result) >= MIN_NEGATIVE_RECALL for result in results[name])
+    ]
+    if not usable:
+        print(f"\nNingún modelo llega al {MIN_NEGATIVE_RECALL:.0%} de negativos bien")
+    best_name = max(
+        usable or results,
+        key=lambda name: np.mean([macro_f1(labels, result) for result in results[name]]),
+    )
     print(f"\nMejor modelo: {best_name}. Acierto por etiqueta con secuencias no vistas:")
-    print(classification_report(labels, results[best_name], digits=3, zero_division=0))
-    print_top_confusions(labels, results[best_name])
+    print(classification_report(labels, results[best_name][0], digits=3, zero_division=0))
+    print_top_confusions(labels, results[best_name][0])
 
-    final_model = candidates()[best_name].fit(features, labels)
+    final_model = candidates()[best_name.removesuffix(AUGMENTED_SUFFIX)]
+    if best_name.endswith(AUGMENTED_SUFFIX):
+        final_model.fit(*with_copies(features, labels, copies))
+    else:
+        final_model.fit(features, labels)
     args.salida.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(final_model, args.salida)
     print(f"\nModelo entrenado con todas las secuencias y guardado en {args.salida}")
