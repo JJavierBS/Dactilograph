@@ -84,11 +84,16 @@ Los modelos se guardan en `models/`, que no se versiona, así que hay que genera
 
 ```bash
 uv run scripts/recognize.py                            # reconocimiento en tiempo real
+uv run scripts/play.py                                 # juego de burbujas para practicar
 uv run scripts/collect_data.py --persona <nombre>      # graba letras estáticas
 uv run scripts/collect_sequences.py --persona <nombre> # graba letras con movimiento
 ```
 
 Tras grabar datos nuevos, hay que volver a entrenar el modelo correspondiente.
+
+## Juego de burbujas
+
+Para practicar el alfabeto, `scripts/play.py` hace subir burbujas con letras. Una burbuja explota al hacer su letra: las estáticas hay que mantenerlas un momento y las de movimiento se reconocen al terminar el gesto. Si una burbuja llega arriba se pierde una vida, y la partida termina al perder las tres. Cada cinco burbujas se sube de nivel, y las burbujas suben más rápido y aparecen más a menudo. Si una burbuja tarda en explotar, se muestra en una esquina cómo se hace su letra, con la mano media del dataset. Con `r` se empieza otra partida.
 
 ## Desarrollo
 
