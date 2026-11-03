@@ -16,6 +16,7 @@ MIN_X = 0.12
 MAX_X = 0.88
 HELP_AFTER_S = 6.0
 POP_DURATION_S = 0.4
+MISS_DURATION_S = 1.2
 
 
 @dataclass
@@ -42,6 +43,7 @@ class BubbleGame:
         self._rng = rng
         self.bubbles: list[Bubble] = []
         self.pops: list[Pop] = []
+        self.misses: list[Pop] = []
         self.score = 0
         self.lives = START_LIVES
         self._last_update_s = now_s
@@ -68,6 +70,7 @@ class BubbleGame:
         elapsed_s = now_s - self._last_update_s
         self._last_update_s = now_s
         self.pops = [pop for pop in self.pops if now_s - pop.popped_s < POP_DURATION_S]
+        self.misses = [miss for miss in self.misses if now_s - miss.popped_s < MISS_DURATION_S]
         if self.is_over:
             return
 
@@ -76,6 +79,7 @@ class BubbleGame:
         escaped = [bubble for bubble in self.bubbles if bubble.y < -BUBBLE_RADIUS]
         self.bubbles = [bubble for bubble in self.bubbles if bubble.y >= -BUBBLE_RADIUS]
         self.lives = max(self.lives - len(escaped), 0)
+        self.misses.extend(Pop(bubble.letter, bubble.x, 0.0, now_s) for bubble in escaped)
         if self.is_over:
             self.bubbles = []
             return
