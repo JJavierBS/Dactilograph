@@ -7,6 +7,7 @@ from dactilograph.game import (
     MAX_BUBBLES,
     MAX_X,
     MIN_X,
+    MISS_DURATION_S,
     POP_DURATION_S,
     POPS_PER_LEVEL,
     START_LIVES,
@@ -97,6 +98,16 @@ def test_escaped_bubble_costs_a_life():
     game.update(1.0)
     assert game.lives == START_LIVES - 1
     assert "A" not in [bubble.letter for bubble in game.bubbles]
+
+
+def test_escaped_bubble_is_kept_as_a_miss_for_a_while():
+    game = new_game()
+    game.bubbles = [Bubble("A", 0.3, -BUBBLE_RADIUS + 0.001, 0.0)]
+    game.update(1.0)
+    [miss] = game.misses
+    assert (miss.letter, miss.x) == ("A", 0.3)
+    game.update(1.0 + MISS_DURATION_S)
+    assert game.misses == []
 
 
 def test_game_ends_without_lives_and_ignores_letters():

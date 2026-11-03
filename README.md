@@ -78,11 +78,12 @@ uv run scripts/train.py              # entrena el clasificador de letras estáti
 uv run scripts/train_dynamic.py      # entrena el clasificador de letras con movimiento
 ```
 
-Los modelos se guardan en `models/`, que no se versiona, así que hay que generarlos tras clonar el repositorio.
+Los modelos se guardan en `models/`, que no se versiona, así que hay que generarlos tras clonar el repositorio. La aplicación los descarga y entrena ella misma la primera vez si no los encuentra.
 
 ## Uso
 
 ```bash
+uv run scripts/app.py                                  # aplicación completa
 uv run scripts/recognize.py                            # reconocimiento en tiempo real
 uv run scripts/play.py                                 # juego de burbujas para practicar
 uv run scripts/collect_data.py --persona <nombre>      # graba letras estáticas
@@ -90,6 +91,16 @@ uv run scripts/collect_sequences.py --persona <nombre> # graba letras con movimi
 ```
 
 Tras grabar datos nuevos, hay que volver a entrenar el modelo correspondiente.
+
+## Aplicación
+
+`scripts/app.py` reúne todo en una sola ventana con aspecto de pizarra de aula, pensada para usarse con una mano mientras la otra signa: cada acción tiene un botón y una tecla.
+
+- **Aprender** (`1`): recorre las 30 letras. Muestra la letra, si es estática o con movimiento y la mano de referencia; al hacerla bien la rodea a tiza y la marca como aprendida. Espacio pasa a la siguiente y retroceso vuelve a la anterior, o se puede elegir cualquier letra en la fila de arriba.
+- **Reconocer** (`2`): muestra la letra que ve el modelo, su seguridad y las últimas letras confirmadas.
+- **Jugar** (`3`): el juego de burbujas, con récord.
+
+`Esc` vuelve al menú y `q` sale. Las letras aprendidas y el récord se guardan en `~/.dactilograph/progreso.json`.
 
 ## Juego de burbujas
 
