@@ -114,3 +114,12 @@ uv run ruff check .      # linter
 uv run ruff format .     # formato
 uv run pytest            # tests
 ```
+
+La versión web está en `web/` y necesita Node.js:
+
+```bash
+cd web
+npm install              # instala las dependencias
+npm test                 # tests, que comparan los cálculos con los de Python
+npm run typecheck        # comprobación de tipos
+```
