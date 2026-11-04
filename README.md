@@ -88,6 +88,7 @@ uv run scripts/recognize.py                            # reconocimiento en tiemp
 uv run scripts/play.py                                 # juego de burbujas para practicar
 uv run scripts/collect_data.py --persona <nombre>      # graba letras estáticas
 uv run scripts/collect_sequences.py --persona <nombre> # graba letras con movimiento
+uv run scripts/export_web.py                           # exporta los modelos a web/
 ```
 
 Tras grabar datos nuevos, hay que volver a entrenar el modelo correspondiente.
