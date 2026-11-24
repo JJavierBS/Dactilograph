@@ -6,10 +6,10 @@ from dactilograph.hand_detector import Hand
 
 # Misma duración que las secuencias de entrenamiento.
 WINDOW_MS = 1500
-# La ventana se clasifica solo si cubre casi toda la duración y tiene mano en al menos la mitad de
-# los ~45 fotogramas, el mismo mínimo que se exige al grabar.
+# La ventana se clasifica solo si cubre casi toda la duración y tiene mano en al menos 12
+# fotogramas (unos 8 FPS): con menos fotogramas por secuencia la clasificación no empeora.
 MIN_WINDOW_SPAN = 0.9
-MIN_FRAMES = 22
+MIN_FRAMES = 12
 # Al deslizarse, la ventana encaja con el gesto durante varios fotogramas seguidos; pedir varios
 # evita que un fotograma suelto dispare una letra.
 CONFIRMATIONS = 3

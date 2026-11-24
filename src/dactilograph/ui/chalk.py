@@ -199,14 +199,31 @@ def soft_mask(width: int, height: int, margin: int, sigma: float) -> np.ndarray:
     return cv2.GaussianBlur(mask, (0, 0), sigma)[..., None]
 
 
+@lru_cache(maxsize=4)
+def shadow_strips(width: int, height: int) -> tuple[tuple[slice, slice, np.ndarray], ...]:
+    margin = SHADOW_MARGIN
+    shade = 1 - SHADOW_STRENGTH * soft_mask(width, height, margin, SHADOW_BLUR)
+    photo_top, photo_left = margin - SHADOW_OFFSET[1], margin - SHADOW_OFFSET[0]
+    photo_bottom, photo_right = photo_top + height, photo_left + width
+    full = slice(None)
+    beside = slice(photo_top, photo_bottom)
+    strips = (
+        (slice(None, photo_top), full),
+        (slice(photo_bottom, None), full),
+        (beside, slice(None, photo_left)),
+        (beside, slice(photo_right, None)),
+    )
+    return tuple((rows, cols, shade[rows, cols]) for rows, cols in strips)
+
+
 def pin_photo(canvas: np.ndarray, photo: np.ndarray, top_left: Point) -> None:
     x, y = top_left
     height, width = photo.shape[:2]
     margin = SHADOW_MARGIN
-    shadow = soft_mask(width, height, margin, SHADOW_BLUR)
     top, left = y + SHADOW_OFFSET[1] - margin, x + SHADOW_OFFSET[0] - margin
-    region = canvas[top : top + shadow.shape[0], left : left + shadow.shape[1]]
-    region[:] = (region * (1 - SHADOW_STRENGTH * shadow)).astype(np.uint8)
+    region = canvas[top : top + height + 2 * margin, left : left + width + 2 * margin]
+    for rows, cols, shade in shadow_strips(width, height):
+        region[rows, cols] = (region[rows, cols] * shade).astype(np.uint8)
     canvas[y : y + height, x : x + width] = photo
     for center, angle in (((x + 18, y + 2), -22), ((x + width - 18, y + 2), 20)):
         corners = cv2.boxPoints((center, (84, 26), angle)).astype(np.int32)
