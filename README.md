@@ -100,7 +100,7 @@ Tras grabar datos nuevos, hay que volver a entrenar el modelo correspondiente.
 - **Reconocer** (`2`): muestra la letra que ve el modelo, su seguridad y las últimas letras confirmadas.
 - **Jugar** (`3`): el juego de burbujas, con récord.
 
-`Esc` vuelve al menú y `q` sale. Las letras aprendidas y el récord se guardan en `~/.dactilograph/progreso.json`.
+`Esc` vuelve al menú, `f` muestra los fotogramas por segundo de la cámara y `q` sale. Las letras aprendidas y el récord se guardan en `~/.dactilograph/progreso.json`.
 
 ## Juego de burbujas
 

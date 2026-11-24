@@ -41,10 +41,10 @@ class HandDetector:
         self._landmarker = vision.HandLandmarker.create_from_options(options)
         self._last_timestamp_ms = -1
 
-    def detect(self, frame_bgr: np.ndarray) -> Hand | None:
+    def detect(self, frame_bgr: np.ndarray, captured_s: float | None = None) -> Hand | None:
         frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
         image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame_rgb)
-        result = self._landmarker.detect_for_video(image, self._next_timestamp_ms())
+        result = self._landmarker.detect_for_video(image, self._next_timestamp_ms(captured_s))
         if not result.hand_landmarks:
             return None
 
@@ -58,10 +58,11 @@ class HandDetector:
             image_height=frame_bgr.shape[0],
         )
 
-    def _next_timestamp_ms(self) -> int:
+    def _next_timestamp_ms(self, captured_s: float | None) -> int:
         # El modo vídeo exige marcas de tiempo estrictamente crecientes, y dos fotogramas pueden
         # llegar en el mismo milisegundo.
-        timestamp_ms = max(int(time.monotonic() * 1000), self._last_timestamp_ms + 1)
+        now_s = time.monotonic() if captured_s is None else captured_s
+        timestamp_ms = max(int(now_s * 1000), self._last_timestamp_ms + 1)
         self._last_timestamp_ms = timestamp_ms
         return timestamp_ms
 

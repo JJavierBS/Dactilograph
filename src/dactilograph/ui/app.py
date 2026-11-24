@@ -12,12 +12,23 @@ from dactilograph.dataset import (
     load_dataset,
     load_sequences,
 )
+from dactilograph.fps import FpsCounter
 from dactilograph.hand_detector import HandDetector
 from dactilograph.live_recognition import LiveRecognizer, Reading
 from dactilograph.progress import Progress
 from dactilograph.reference_hands import reference_hands
 from dactilograph.ui.base import Context, Screen
-from dactilograph.ui.chalk import HEIGHT, WIDTH, Chalk, board_background, chalk_grain, draw_wood
+from dactilograph.ui.chalk import (
+    DIM,
+    FRAME,
+    HEIGHT,
+    SANS,
+    WIDTH,
+    Chalk,
+    board_background,
+    chalk_grain,
+    draw_wood,
+)
 from dactilograph.ui.learn import LearnScreen
 from dactilograph.ui.menu import MenuScreen
 from dactilograph.ui.play import PlayScreen
@@ -35,6 +46,8 @@ GLOBAL_KEYS = {
     ord("q"): "salir",
 }
 QUIT_KEYS = {ESCAPE: "salir", ord("q"): "salir"}
+FPS_KEY = ord("f")
+FPS_ORIGIN = (WIDTH - FRAME - 24, FRAME + 34)
 
 
 class App:
@@ -57,6 +70,8 @@ class App:
         self._preparation: Preparation | None = None
         self._screens: dict[str, Screen] = {}
         self._screen: Screen = MenuScreen()
+        self._fps = FpsCounter()
+        self._show_fps = False
 
     def run(self) -> None:
         cv2.namedWindow(
@@ -106,17 +121,24 @@ class App:
                 self._load_models()
 
             frame = None
+            captured_s = now
             reading = None
             if self._screen.uses_camera and self._camera is not None:
-                frame = self._camera.read()
+                timed = self._camera.read_timed()
+                if timed is not None:
+                    frame, captured_s = timed
+                    self._fps.tick(captured_s)
             if frame is not None and self._detector is not None and self._live is not None:
-                reading = self._live.read(now, self._detector.detect(frame))
+                reading = self._live.read(captured_s, self._detector.detect(frame, captured_s))
 
             context = self._context(now, frame, reading)
             self._screen.update(context)
             canvas = self._background.copy()
             self._chalk.clear()
             buttons = self._screen.draw(canvas, self._chalk, context)
+            if self._show_fps and frame is not None:
+                fps = f"{self._fps.fps:.0f} fps"
+                self._chalk.text(fps, FPS_ORIGIN, 0.6, DIM, 1, SANS, "right")
             self._chalk.apply(canvas)
             ready = bool(self._screens)
             items = TRAY_ITEMS if ready else self._screen.tray_items or QUIT_ONLY
@@ -125,7 +147,9 @@ class App:
 
             key = cv2.waitKeyEx(1)
             actions = self._clicked_actions(buttons)
-            if key != -1:
+            if key == FPS_KEY:
+                self._show_fps = not self._show_fps
+            elif key != -1:
                 screen_action = self._screen.key_action(key)
                 global_action = (GLOBAL_KEYS if ready else QUIT_KEYS).get(key)
                 if screen_action or global_action:
@@ -148,6 +172,7 @@ class App:
         screen = self._screens[name]
         if self._live is not None:
             self._live.reset()
+        self._fps = FpsCounter()
         screen.enter(context)
         self._screen = screen
 
