@@ -83,10 +83,19 @@ def test_window_without_enough_hands_is_not_classified():
     predictor = FakePredictor("Z")
     recognizer = DynamicRecognizer(predictor)
     for frame in range(200):
-        hand = HAND if frame % 3 == 0 else None
+        hand = HAND if frame % 5 == 0 else None
         recognizer.update(frame * FRAME_MS, hand)
-    assert frames_to_fill_window() // 3 < MIN_FRAMES
+    assert frames_to_fill_window() // 5 < MIN_FRAMES
     assert predictor.calls == 0
+
+
+def test_low_frame_rate_window_is_classified():
+    predictor = FakePredictor("Z")
+    recognizer = DynamicRecognizer(predictor)
+    slow_frame_ms = 125
+    for frame in range(WINDOW_MS // slow_frame_ms + CONFIRMATIONS):
+        recognizer.update(frame * slow_frame_ms, HAND)
+    assert predictor.calls > 0
 
 
 def test_old_frames_leave_the_window():
