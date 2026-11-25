@@ -156,6 +156,17 @@ Tras grabar datos nuevos, hay que volver a entrenar el modelo correspondiente.
 
 Para practicar el alfabeto, `scripts/play.py` hace subir burbujas con letras. Una burbuja explota al hacer su letra: las estáticas hay que mantenerlas un momento y las de movimiento se reconocen al terminar el gesto. Si una burbuja llega arriba se pierde una vida, y la partida termina al perder las tres. Cada cinco burbujas se sube de nivel, y las burbujas suben más rápido y aparecen más a menudo. Si una burbuja tarda en explotar, se muestra en una esquina cómo se hace su letra, con la mano media del dataset. Con `r` se empieza otra partida.
 
+### Versión web
+
+`web/` contiene la misma aplicación para el navegador, con los tres modos (Aprender, Reconocer y Jugar) y la misma pizarra, dibujada en un canvas. No necesita servidor: MediaPipe y los dos clasificadores se ejecutan en el propio navegador con WebAssembly, la cámara no sale del ordenador y el progreso se guarda en el `localStorage`.
+
+- **Modelos:** `uv run scripts/export_web.py` exporta el clasificador de letras estáticas a ONNX y el de letras con movimiento, junto con las manos de referencia, a `web/public/models/`. Los tests de la web comprueban que dan los mismos resultados que en Python.
+- **MediaPipe:** `npm run dev` y `npm run build` descargan el modelo de la mano con una versión fija y comprueban su huella, así que la web usa exactamente el mismo modelo que la aplicación de escritorio y no hace peticiones a terceros.
+- **Fuente:** Rubik, la que usa OpenCV 5, se sirve desde `web/public/fonts/` con su licencia OFL.
+- **Publicación:** cualquier hosting estático sirve. En Vercel, con `web` como carpeta raíz y el framework Vite; la compilación genera `web/dist/`.
+
+La primera visita descarga unos 16 MB (los motores de MediaPipe y ONNX y el modelo de la mano), que el navegador guarda después en caché.
+
 ### Desarrollo
 
 ```bash
@@ -325,6 +336,17 @@ After recording new data, the corresponding model has to be trained again.
 ### Bubble game
 
 To practise the alphabet, `scripts/play.py` makes bubbles with letters float up. A bubble pops when you make its letter: static letters have to be held for a moment and moving letters are recognised when the gesture ends. If a bubble reaches the top you lose a life, and the game ends after losing three. Every five bubbles you level up, and bubbles rise faster and appear more often. If a bubble takes too long to pop, a corner of the screen shows how to make its letter with the average hand from the dataset. Press `r` to start a new game.
+
+### Web version
+
+`web/` contains the same application for the browser, with the three modes (Learn, Recognise and Play) and the same blackboard, drawn on a canvas. It needs no server: MediaPipe and both classifiers run in the browser with WebAssembly, the camera never leaves the computer and progress is stored in `localStorage`.
+
+- **Models:** `uv run scripts/export_web.py` exports the static letter classifier to ONNX and the moving letter classifier, together with the reference hands, to `web/public/models/`. The web tests check that they give the same results as in Python.
+- **MediaPipe:** `npm run dev` and `npm run build` download the hand model at a pinned version and verify its checksum, so the web uses exactly the same model as the desktop application and makes no third-party requests.
+- **Font:** Rubik, the font OpenCV 5 uses, is served from `web/public/fonts/` with its OFL license.
+- **Deployment:** any static hosting works. On Vercel, use `web` as the root directory and the Vite framework; the build outputs `web/dist/`.
+
+The first visit downloads about 16 MB (the MediaPipe and ONNX engines and the hand model), which the browser then caches.
 
 ### Development
 
