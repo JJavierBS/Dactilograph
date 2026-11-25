@@ -3,9 +3,7 @@ import wasmLoaderUrl from "@mediapipe/tasks-vision/vision_wasm_internal.js?url";
 import wasmBinaryUrl from "@mediapipe/tasks-vision/vision_wasm_internal.wasm?url";
 import type { Hand, Handedness, Point3 } from "./hand";
 
-export const HAND_MODEL_URL =
-  "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/" +
-  "float16/latest/hand_landmarker.task";
+export const HAND_MODEL_URL = `${import.meta.env.BASE_URL}models/hand_landmarker.task`;
 
 function createLandmarker(delegate: "GPU" | "CPU"): Promise<HandLandmarker> {
   return HandLandmarker.createFromOptions(
