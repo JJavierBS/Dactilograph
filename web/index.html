@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dactilograph</title>
+    <meta
+      name="description"
+      content="Aprende el alfabeto dactilológico de la Lengua de Signos Española con tu webcam."
+    />
+  </head>
+  <body>
+    <main>
+      <canvas
+        id="board"
+        width="1280"
+        height="720"
+        aria-label="Dactilograph: aprende, reconoce y practica el alfabeto dactilológico de la LSE con tu webcam"
+      ></canvas>
+    </main>
+    <video id="video" playsinline muted></video>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
