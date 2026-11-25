@@ -112,7 +112,11 @@ describe("DynamicRecognizer", () => {
   });
 
   it("never returns the no-letter label", () => {
-    const results = feed(new DynamicRecognizer(new FakePredictor(NO_DYNAMIC_LETTER).predict), 0, 200);
+    const results = feed(
+      new DynamicRecognizer(new FakePredictor(NO_DYNAMIC_LETTER).predict),
+      0,
+      200,
+    );
     expect(new Set(results)).toEqual(new Set([null]));
   });
 
@@ -187,12 +191,18 @@ describe("LiveRecognizer", () => {
   });
 
   it("has no prediction without a hand", async () => {
-    const live = new LiveRecognizer(async () => prediction("A", SURE), () => "Z");
+    const live = new LiveRecognizer(
+      async () => prediction("A", SURE),
+      () => "Z",
+    );
     expect(await live.read(0, null)).toEqual({ hand: null, prediction: null, confirmed: [] });
   });
 
   it("forgets the held letter after a reset", async () => {
-    const live = new LiveRecognizer(async () => prediction("A", SURE), () => NO_DYNAMIC_LETTER);
+    const live = new LiveRecognizer(
+      async () => prediction("A", SURE),
+      () => NO_DYNAMIC_LETTER,
+    );
     await live.read(0, HAND);
     live.reset();
     expect((await live.read(HOLD_MS, HAND)).confirmed).toEqual([]);

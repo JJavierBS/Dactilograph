@@ -7,7 +7,8 @@ export class FpsCounter {
   tick(nowMs: number): number {
     if (this.lastMs !== null && nowMs > this.lastMs) {
       const instant = 1000 / (nowMs - this.lastMs);
-      this.fps = this.fps === 0 ? instant : this.smoothing * this.fps + (1 - this.smoothing) * instant;
+      this.fps =
+        this.fps === 0 ? instant : this.smoothing * this.fps + (1 - this.smoothing) * instant;
     }
     this.lastMs = nowMs;
     return this.fps;

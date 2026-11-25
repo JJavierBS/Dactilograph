@@ -84,9 +84,14 @@ export class LearnScreen implements Screen {
     }
     const { prediction } = reading;
     this.readingLetter.textContent = prediction?.letter ?? "–";
-    this.readingLetter.classList.toggle("success-letter", prediction?.letter === this.session.target);
+    this.readingLetter.classList.toggle(
+      "success-letter",
+      prediction?.letter === this.session.target,
+    );
     this.readingConfidence.textContent =
-      prediction === null ? "no veo tu mano" : `seguridad ${formatConfidence(prediction.confidence)}`;
+      prediction === null
+        ? "no veo tu mano"
+        : `seguridad ${formatConfidence(prediction.confidence)}`;
   }
 
   private change(action: () => void): void {

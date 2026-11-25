@@ -337,6 +337,121 @@ h2,
   margin-top: 32px;
 }
 
+.play-option .option-name {
+  color: var(--pink);
+}
+
+.play {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr) 160px;
+  gap: 24px;
+  align-items: start;
+}
+
+.play-side p {
+  margin: 0 0 6px;
+}
+
+.play-right {
+  text-align: center;
+}
+
+.score-line {
+  font-size: 1.8rem;
+  font-style: italic;
+  font-weight: 700;
+}
+
+.help {
+  margin-top: 32px;
+  text-align: center;
+}
+
+.help-letter {
+  font-size: 3rem;
+  font-style: italic;
+  font-weight: 700;
+  color: var(--yellow);
+}
+
+.help canvas {
+  width: 100%;
+  max-width: 170px;
+}
+
+.lives {
+  font-size: 2rem;
+  letter-spacing: 6px;
+  color: var(--pink);
+}
+
+.arena {
+  position: relative;
+}
+
+.arena .camera canvas {
+  opacity: 0.6;
+}
+
+.bubbles {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.game-over {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 6px;
+  background: rgba(33, 53, 45, 0.75);
+  text-align: center;
+}
+
+.game-over p {
+  margin: 0;
+}
+
+.over-title {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-style: italic;
+  font-weight: 700;
+}
+
+.final-score {
+  font-size: 2rem;
+  font-style: italic;
+  color: var(--yellow);
+}
+
+.new-record {
+  font-size: 1.5rem;
+  font-style: italic;
+  color: var(--pink);
+}
+
+.over-buttons {
+  display: flex;
+  gap: 16px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.button-link {
+  padding: 10px 20px;
+  border: 2px solid var(--faint);
+  border-radius: 999px;
+  color: var(--dim);
+  text-decoration: none;
+}
+
 button {
   font: inherit;
   font-size: 1.1rem;
@@ -370,7 +485,8 @@ video {
 @media (max-width: 900px) {
   .menu,
   .stage,
-  .learn {
+  .learn,
+  .play {
     grid-template-columns: 1fr;
   }
 

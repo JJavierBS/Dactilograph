@@ -9,6 +9,7 @@ import { LearnScreen } from "./learnScreen";
 import { LiveRecognizer } from "./liveRecognizer";
 import { MenuScreen, type ReferenceHands } from "./menuScreen";
 import { normalizeHand } from "./normalization";
+import { PlayScreen } from "./playScreen";
 import { browserStore, Progress } from "./progress";
 import { RecognizeScreen } from "./recognizeScreen";
 import { element, type Screen } from "./screen";
@@ -20,6 +21,7 @@ const FPS_KEY = "f";
 const SCREEN_KEYS: Readonly<Record<string, string>> = {
   "1": "#aprender",
   "2": "#reconocer",
+  "3": "#jugar",
   Escape: "#",
 };
 
@@ -169,6 +171,7 @@ async function main(): Promise<void> {
     new MenuScreen(references, progress),
     new LearnScreen(references, progress),
     new RecognizeScreen(),
+    new PlayScreen(references, progress),
   ];
   const app = new App(new Map(screens.map((screen) => [screen.name, screen])));
   window.addEventListener("hashchange", () => app.route());

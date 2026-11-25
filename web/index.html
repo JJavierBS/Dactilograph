@@ -16,6 +16,7 @@
         <a href="#" data-screen="menu">Menú <kbd>Esc</kbd></a>
         <a href="#aprender" data-screen="aprender">Aprender <kbd>1</kbd></a>
         <a href="#reconocer" data-screen="reconocer">Reconocer <kbd>2</kbd></a>
+        <a href="#jugar" data-screen="jugar">Jugar <kbd>3</kbd></a>
       </nav>
     </header>
 
@@ -37,6 +38,13 @@
                 <span class="option-key">2</span>
                 <span class="option-name">Reconocer</span>
                 <span class="option-note">haz letras y mira cuál ve</span>
+              </a>
+            </li>
+            <li>
+              <a href="#jugar" class="option play-option">
+                <span class="option-key">3</span>
+                <span class="option-name">Jugar</span>
+                <span class="option-note">explota burbujas signando</span>
               </a>
             </li>
           </ol>
@@ -87,6 +95,41 @@
             <p id="confidence" class="confidence">seguridad</p>
             <p class="label history-label">lo último que has hecho</p>
             <ol id="history" class="history"></ol>
+          </div>
+        </div>
+      </section>
+
+      <section id="screen-jugar" class="screen" hidden>
+        <div class="play">
+          <div class="play-side">
+            <p class="score-line">Puntos <span id="score">0</span></p>
+            <p class="score-line">Nivel <span id="level">1</span></p>
+            <p id="record" class="label"></p>
+            <div id="help" class="help" hidden>
+              <p class="label">así se hace la</p>
+              <p id="help-letter" class="help-letter"></p>
+              <p id="help-kind" class="label"></p>
+              <canvas id="help-hand" width="170" height="170"></canvas>
+            </div>
+          </div>
+          <div class="arena">
+            <div class="camera-slot"></div>
+            <canvas id="bubbles" class="bubbles"></canvas>
+            <div id="game-over" class="game-over" hidden>
+              <p class="over-title">Fin de la partida</p>
+              <p id="final-score" class="final-score"></p>
+              <p id="new-record" class="new-record" hidden>¡nuevo récord!</p>
+              <div class="over-buttons">
+                <button id="again" type="button" class="emphasized">otra partida <kbd>r</kbd></button>
+                <a class="button-link" href="#">menú <kbd>Esc</kbd></a>
+              </div>
+            </div>
+          </div>
+          <div class="play-side play-right">
+            <p class="label">vidas</p>
+            <p id="lives" class="lives"></p>
+            <p class="label">haces</p>
+            <p id="doing" class="letter small-letter">–</p>
           </div>
         </div>
       </section>
