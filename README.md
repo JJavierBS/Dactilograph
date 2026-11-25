@@ -158,6 +158,8 @@ Para practicar el alfabeto, `scripts/play.py` hace subir burbujas con letras. Un
 
 ### Versión web
 
+Pruébala en **https://dactilograph.josejavierbravo.com**. Si conoces la LSE y ves algún gesto mal hecho, la propia web tiene un formulario para colaborar.
+
 `web/` contiene la misma aplicación para el navegador, con los tres modos (Aprender, Reconocer y Jugar) y la misma pizarra, dibujada en un canvas. No necesita servidor: MediaPipe y los dos clasificadores se ejecutan en el propio navegador con WebAssembly, la cámara no sale del ordenador y el progreso se guarda en el `localStorage`.
 
 - **Modelos:** `uv run scripts/export_web.py` exporta el clasificador de letras estáticas a ONNX y el de letras con movimiento, junto con las manos de referencia, a `web/public/models/`. Los tests de la web comprueban que dan los mismos resultados que en Python.
@@ -338,6 +340,8 @@ After recording new data, the corresponding model has to be trained again.
 To practise the alphabet, `scripts/play.py` makes bubbles with letters float up. A bubble pops when you make its letter: static letters have to be held for a moment and moving letters are recognised when the gesture ends. If a bubble reaches the top you lose a life, and the game ends after losing three. Every five bubbles you level up, and bubbles rise faster and appear more often. If a bubble takes too long to pop, a corner of the screen shows how to make its letter with the average hand from the dataset. Press `r` to start a new game.
 
 ### Web version
+
+Try it at **https://dactilograph.josejavierbravo.com**. If you know LSE and spot a wrong sign, the site has a form to get in touch and help.
 
 `web/` contains the same application for the browser, with the three modes (Learn, Recognise and Play) and the same blackboard, drawn on a canvas. It needs no server: MediaPipe and both classifiers run in the browser with WebAssembly, the camera never leaves the computer and progress is stored in `localStorage`.
 

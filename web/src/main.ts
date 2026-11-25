@@ -9,6 +9,7 @@ import {
   type Point2,
   WIDTH,
 } from "./chalk";
+import { bindCollaborationForm, COLLABORATE_ACTION, scrollToCollaboration } from "./collaborate";
 import { DynamicClassifier, type NearestNeighborsModel } from "./dynamicClassifier";
 import { sequenceFeatures } from "./dynamicFeatures";
 import { FpsCounter } from "./fpsCounter";
@@ -33,6 +34,7 @@ const SCREEN_KEYS: Readonly<Record<string, string>> = {
   "3": "jugar",
 };
 const FPS_KEY = "f";
+const EDITABLE = "input, textarea, select";
 const FPS_ORIGIN: Point2 = [WIDTH - FRAME - 24, FRAME + 34];
 
 function element<T extends HTMLElement>(id: string): T {
@@ -179,6 +181,10 @@ class App {
       void this.startCamera();
       return;
     }
+    if (action === COLLABORATE_ACTION) {
+      scrollToCollaboration();
+      return;
+    }
     const target = this.shown.handle(action, this.makeContext(performance.now()));
     if (target !== null && this.screens.has(target)) {
       this.go(target);
@@ -186,7 +192,8 @@ class App {
   }
 
   private onKey(event: KeyboardEvent): void {
-    if (event.altKey || event.ctrlKey || event.metaKey) {
+    const typing = event.target instanceof Element && event.target.closest(EDITABLE) !== null;
+    if (typing || event.altKey || event.ctrlKey || event.metaKey) {
       return;
     }
     const action = this.shown.keyAction(event.key) ?? SCREEN_KEYS[event.key] ?? null;
@@ -287,6 +294,7 @@ class App {
 }
 
 async function main(): Promise<void> {
+  bindCollaborationForm(element<HTMLFormElement>("colabora-form"));
   const models = loadModels();
   const [references] = await Promise.all([
     fetchJson<ReferenceHands>("reference_hands.json"),
