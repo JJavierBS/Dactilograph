@@ -1,8 +1,6 @@
 # Dactilograph
 
-Reconocimiento en tiempo real del **alfabeto dactilológico de la Lengua de Signos Española (LSE)** mediante visión artificial.
-
-Miniproyecto de la asignatura de Informática Gráfica.
+Reconocimiento en tiempo real del **alfabeto dactilológico de la Lengua de Signos Española (LSE)** mediante visión artificial, con una webcam normal, sin GPU y sin conexión.
 
 ## La idea
 
@@ -10,7 +8,7 @@ Una aplicación que, a través de la webcam, reconoce la letra del alfabeto dact
 
 No es un traductor de lengua de signos: la LSE funciona por signos con gramática propia. Este proyecto reconoce únicamente el **deletreo manual**, en el que cada letra corresponde a una postura de la mano o, en algunas letras, a una postura con movimiento.
 
-Referencia del alfabeto: https://signame.es/alfabeto-dactilologico-lse/ (30 signos realizados con una sola mano: A–Z con Ñ, más CH, LL y RR).
+Referencia del alfabeto: [Fundación CNSE, Dactilología](https://fundacioncnse.org/educa/bancolse/dactilologico.php) (30 signos realizados con una sola mano: A–Z con Ñ, más CH, LL y RR).
 
 ## Cómo funciona
 
@@ -20,9 +18,9 @@ Webcam (OpenCV) → MediaPipe (21 puntos de la mano) → normalización → clas
 
 1. **Captura:** OpenCV obtiene los fotogramas de la webcam.
 2. **Detección:** MediaPipe extrae automáticamente los 21 puntos clave de la mano (x, y, z).
-3. **Normalización:** los puntos se trasladan respecto a la muñeca, se escalan según el tamaño de la mano y se refleja la mano izquierda, para que el resultado no dependa de la posición ni de la distancia a la cámara. El resultado es un vector de 63 números.
-4. **Clasificación de letras estáticas:** un modelo pequeño y local, entrenado mediante aprendizaje supervisado, recibe esos 63 números y devuelve la letra más probable con su confianza.
-5. **Clasificación de letras con movimiento:** se guarda el último segundo y medio de fotogramas y un segundo modelo clasifica esa ventana a partir de la trayectoria de la muñeca y del índice y de la forma media de la mano. Una letra solo se acepta si se repite en varios fotogramas seguidos.
+3. **Normalización:** las coordenadas se pasan a píxeles cuadrados, se trasladan respecto a la muñeca, se escalan por el tamaño de la palma (la distancia entre la muñeca y la base del dedo corazón, que no cambia entre el puño y la mano abierta) y se refleja la mano izquierda. Así el resultado no depende de la posición ni de la distancia a la cámara. El resultado es un vector de 63 números. La rotación no se normaliza a propósito: algunas letras, como la G y la H frente a la I y la U, se distinguen sobre todo por la orientación de la mano.
+4. **Clasificación de letras estáticas:** una SVM recibe esos 63 números y devuelve la letra más probable con su seguridad. Una letra solo cuenta si se mantiene 0,4 s con una seguridad de al menos 0,6.
+5. **Clasificación de letras con movimiento:** se guarda el último segundo y medio de fotogramas y un k-NN clasifica esa ventana a partir de la trayectoria de la muñeca y del índice y de la forma media de la mano. Una letra solo se acepta si sale igual en 3 clasificaciones seguidas, y después se espera 1 s antes de admitir otra.
 6. **Resultado:** se muestra el vídeo con el esqueleto de la mano y la letra detectada.
 
 ## Aprendizaje supervisado
@@ -36,11 +34,33 @@ persona,letra,x0,y0,z0,...,x20,y20,z20
 jose,A,0.00,0.00,0.00,...
 ```
 
-Con esos datos se entrena un clasificador clásico (k-NN, SVM o similar), que se guarda y se usa después en la aplicación en tiempo real.
+Cada letra estática se grabó dos veces con dos cámaras distintas, 100 fotogramas por grabación. Las letras con movimiento tienen 3 secuencias por letra. Todo el dataset es de una sola persona.
 
-Para las letras con movimiento, cada muestra es una secuencia de unos 1,5 s. `data/sequences.csv` guarda una fila por fotograma con los puntos de MediaPipe sin normalizar, de modo que las características se pueden recalcular sin volver a grabar. Normalizar cada fotograma por separado borraría el desplazamiento de la mano, así que la trayectoria se mide desde la muñeca del primer fotograma.
+| | Letras | Grabaciones | Fotogramas |
+|---|---:|---:|---:|
+| Estáticas | 21 | 42 | 4 200 |
+| Con movimiento | 9 | 27 | 1 202 |
 
-Los ejemplos de "ninguna letra con movimiento" se generan al entrenar a partir de las grabaciones de letras estáticas. También se pueden grabar con la etiqueta `-`.
+Para las letras con movimiento, cada muestra es una secuencia de unos 1,5 s, unos 45 fotogramas a 30 FPS. `data/sequences.csv` guarda una fila por fotograma con los puntos de MediaPipe sin normalizar, de modo que las características se pueden recalcular sin volver a grabar. Normalizar cada fotograma por separado borraría el desplazamiento de la mano, así que la trayectoria se mide desde la muñeca del primer fotograma.
+
+Cada secuencia se describe con 143 números: la trayectoria de la muñeca y del índice en el plano, medida en palmas e interpolada a 20 instantes equiespaciados (80 valores), y la forma media de la mano en la ventana (63 valores). Al interpolar no importan la velocidad del gesto, los FPS de la cámara ni los fotogramas en los que se perdió la mano.
+
+Los ejemplos de "ninguna letra con movimiento" se generan al entrenar a partir de las grabaciones de letras estáticas, colocando la mano con un pequeño temblor aleatorio para que no aprenda una quietud perfecta. También se pueden grabar con la etiqueta `-`.
+
+## Evaluación y resultados
+
+Mezclar fotogramas al azar entre entrenamiento y prueba da cifras engañosas: los 100 fotogramas de una grabación son casi idénticos, y un k-NN llegaba así al 99,8 %. Por eso cada grabación entera va a un solo pliegue y los modelos se evalúan siempre con grabaciones que no han visto.
+
+| Letras estáticas | Tal cual | Mano girada |
+|---|---:|---:|
+| k-NN (k = 5) | 76,9 % | 73,0 % |
+| k-NN + aumento | 78,6 % | 77,6 % |
+| SVM (RBF) | 81,5 % | 75,4 % |
+| **SVM + aumento** (elegido) | **79,2 %** | **79,3 %** |
+
+"Mano girada" aplica una transformación afín aleatoria a cada fotograma de prueba. La SVM sin aumento acierta más con la mano tal cual, pero cae en cuanto gira un poco; con aumento se mantiene, así que es la que usa la aplicación. Va calibrada para que devuelva probabilidades, que la aplicación muestra como seguridad.
+
+Para las letras con movimiento se elige un **k-NN con k = 1 y aumento**: F1 medio de 0,69 con secuencias no vistas y el 95,2 % de los negativos bien reconocidos. Una SVM descartaba casi todos los negativos como letras, y un k mayor haría que los negativos ganaran por número a las 3 muestras de cada letra.
 
 ## Aumento de datos con transformaciones afines
 
@@ -50,11 +70,15 @@ Las copias se añaden solo al entrenamiento de cada pliegue. Cada modelo se eval
 
 `uv run scripts/plot_augmentation.py` dibuja una mano junto a sus transformaciones y las matrices usadas.
 
+## Rendimiento
+
+En portátiles con poca potencia, o sin cargador, los FPS de la cámara pueden bajar a unos 14. Como la trayectoria se interpola siempre a 20 instantes, la ventana de 1,5 s solo necesita 12 fotogramas con mano, unos 8 FPS: quitando fotogramas a las secuencias grabadas, la clasificación no empeora. La cámara se lee en un hilo aparte que guarda solo el último fotograma con su instante de captura, para no procesar imágenes atrasadas. La tecla `f` de la aplicación muestra los FPS.
+
 ## Alcance
 
 - **Letras estáticas (21):** A, B, C, CH, D, E, F, G, H, I, K, L, M, N, O, P, Q, R, S, T, U.
 - **Letras con movimiento (9):** J, LL, Ñ, RR, V, W, X, Y y Z.
-- **Investigación:** comparar distintos clasificadores y formas de representar la mano, y analizar qué letras se confunden entre sí y cómo funciona con personas distintas a las del entrenamiento.
+- **Limitaciones:** el dataset es de una sola persona, así que no se ha medido cómo funciona con otras, y las letras con movimiento tienen pocas secuencias por letra. La aplicación sigue una sola mano, que basta para el alfabeto LSE.
 
 ## Tecnologías
 
