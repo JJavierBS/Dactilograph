@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import referenceHands from "../public/models/reference_hands.json";
 import { ALPHABET, DYNAMIC_LETTERS } from "../src/alphabet";
-import { fitHand } from "../src/drawing";
+import { fitHand } from "../src/chalk";
 import { LearnSession } from "../src/learning";
 import { PROGRESS_KEY, Progress, type KeyValueStore } from "../src/progress";
 
@@ -93,6 +93,7 @@ describe("fitHand", () => {
         [0, 0],
         [2, 1],
       ],
+      [0, 0],
       100,
       0.1,
     );

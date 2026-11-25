@@ -1,41 +1,46 @@
 import "./style.css";
-import { drawHand } from "./drawing";
+import {
+  boardBackground,
+  Chalk,
+  chalkGrain,
+  DIM,
+  FRAME,
+  HEIGHT,
+  type Point2,
+  WIDTH,
+} from "./chalk";
 import { DynamicClassifier, type NearestNeighborsModel } from "./dynamicClassifier";
 import { sequenceFeatures } from "./dynamicFeatures";
 import { FpsCounter } from "./fpsCounter";
-import type { Hand } from "./hand";
 import { HandTracker } from "./handTracker";
-import { LearnScreen } from "./learnScreen";
-import { LiveRecognizer } from "./liveRecognizer";
-import { MenuScreen, type ReferenceHands } from "./menuScreen";
+import { LiveRecognizer, type Reading } from "./liveRecognizer";
 import { normalizeHand } from "./normalization";
-import { PlayScreen } from "./playScreen";
 import { browserStore, Progress } from "./progress";
-import { RecognizeScreen } from "./recognizeScreen";
-import { element, type Screen } from "./screen";
+import { CameraScreen } from "./screens/camera";
+import { LearnScreen } from "./screens/learn";
+import { MenuScreen } from "./screens/menu";
+import { PlayScreen } from "./screens/play";
+import { RecognizeScreen } from "./screens/recognize";
 import { configureRuntime, StaticClassifier } from "./staticClassifier";
+import { type Button, type CanvasScreen, type Context, drawTray, type ReferenceHands } from "./ui";
 
-const MODELS_URL = `${import.meta.env.BASE_URL}models/`;
-const HAND_COLOR = "#f2d35b";
-const FPS_KEY = "f";
+const BASE_URL = import.meta.env.BASE_URL;
+const MODELS_URL = `${BASE_URL}models/`;
 const SCREEN_KEYS: Readonly<Record<string, string>> = {
-  "1": "#aprender",
-  "2": "#reconocer",
-  "3": "#jugar",
-  Escape: "#",
+  Escape: "menu",
+  "1": "aprender",
+  "2": "reconocer",
+  "3": "jugar",
 };
+const FPS_KEY = "f";
+const FPS_ORIGIN: Point2 = [WIDTH - FRAME - 24, FRAME + 34];
 
-const camera = element<HTMLDivElement>("camera");
-const cameraGate = element<HTMLDivElement>("camera-gate");
-const startButton = element<HTMLButtonElement>("start");
-const statusText = element<HTMLParagraphElement>("status");
-const video = element<HTMLVideoElement>("video");
-const canvas = element<HTMLCanvasElement>("view");
-const fpsText = element<HTMLParagraphElement>("fps");
-const trayLinks = document.querySelectorAll<HTMLAnchorElement>(".tray a");
-
-function showStatus(message: string): void {
-  statusText.textContent = message;
+function element<T extends HTMLElement>(id: string): T {
+  const found = document.getElementById(id);
+  if (found === null) {
+    throw new Error(`Missing element #${id}`);
+  }
+  return found as T;
 }
 
 async function fetchJson<T>(name: string): Promise<T> {
@@ -44,6 +49,19 @@ async function fetchJson<T>(name: string): Promise<T> {
     throw new Error(`${name}: ${response.status}`);
   }
   return (await response.json()) as T;
+}
+
+async function loadFonts(): Promise<void> {
+  const faces = [
+    new FontFace("Rubik", `url(${BASE_URL}fonts/Rubik.woff2)`, { weight: "300 900" }),
+    new FontFace("Rubik", `url(${BASE_URL}fonts/Rubik-Italic.woff2)`, {
+      weight: "300 900",
+      style: "italic",
+    }),
+  ];
+  for (const face of await Promise.all(faces.map((face) => face.load()))) {
+    document.fonts.add(face);
+  }
 }
 
 async function loadModels(): Promise<[HandTracker, LiveRecognizer]> {
@@ -64,138 +82,233 @@ async function loadModels(): Promise<[HandTracker, LiveRecognizer]> {
   return [tracker, live];
 }
 
-async function openCamera(): Promise<void> {
-  video.srcObject = await navigator.mediaDevices.getUserMedia({
-    video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
-    audio: false,
-  });
-  await video.play();
-}
-
 class App {
-  private current: Screen;
+  private readonly context: CanvasRenderingContext2D;
+  private readonly background = boardBackground(Math.random);
+  private readonly chalk = new Chalk(chalkGrain(Math.random));
+  private readonly cameraScreen = new CameraScreen();
+  private readonly fps = new FpsCounter();
+  private current: CanvasScreen;
+  private mouse: Point2 | null = null;
+  private buttons: Button[] = [];
+  private showFps = false;
+  private cameraState: "off" | "starting" | "on" = "off";
+  private tracker: HandTracker | null = null;
   private live: LiveRecognizer | null = null;
+  private latest: Reading | null = null;
+  private pending: string[] = [];
+  private reading = false;
+  private lastFrameTime = -1;
 
-  constructor(private readonly screens: ReadonlyMap<string, Screen>) {
-    this.current = screens.get("menu")!;
-  }
-
-  route(): void {
-    const name = window.location.hash.replace("#", "") || "menu";
-    const next = this.screens.get(name) ?? this.screens.get("menu")!;
-    this.current.leave();
-    for (const screen of this.screens.values()) {
-      screen.element.hidden = screen !== next;
-    }
-    for (const link of trayLinks) {
-      link.classList.toggle("active", link.dataset["screen"] === next.name);
-    }
-    const slot = next.element.querySelector(".camera-slot");
-    camera.hidden = slot === null;
-    slot?.append(camera);
-    this.live?.reset();
-    this.current = next;
-    next.enter(performance.now());
-  }
-
-  handleKey(event: KeyboardEvent): void {
-    if (event.altKey || event.ctrlKey || event.metaKey) {
-      return;
-    }
-    if (this.current.handleKey(event)) {
-      event.preventDefault();
-      return;
-    }
-    const target = SCREEN_KEYS[event.key];
-    if (target !== undefined) {
-      window.location.hash = target;
-    } else if (event.key === FPS_KEY) {
-      fpsText.hidden = !fpsText.hidden;
-    }
-  }
-
-  run(tracker: HandTracker, live: LiveRecognizer): void {
-    this.live = live;
+  constructor(
+    private readonly canvas: HTMLCanvasElement,
+    private readonly video: HTMLVideoElement,
+    private readonly screens: ReadonlyMap<string, CanvasScreen>,
+    private readonly models: Promise<[HandTracker, LiveRecognizer]>,
+    private readonly references: ReferenceHands,
+    private readonly progress: Progress,
+  ) {
     const context = canvas.getContext("2d");
     if (context === null) {
       throw new Error("The browser cannot draw on a canvas");
     }
-    const fps = new FpsCounter();
-    let lastFrameTime = -1;
-    let reading = false;
-    let hand: Hand | null = null;
+    this.context = context;
+    this.current = screens.get("menu")!;
+    models.then(
+      () => this.setStatus("Listo: activa la cámara para empezar."),
+      (error: unknown) => this.setStatus(`No he podido cargar los modelos: ${String(error)}`, true),
+    );
+    canvas.addEventListener("mousemove", (event) => {
+      this.mouse = this.toBoard(event);
+    });
+    canvas.addEventListener("mouseleave", () => {
+      this.mouse = null;
+    });
+    canvas.addEventListener("click", (event) => {
+      const point = this.toBoard(event);
+      const hit = [...this.buttons].reverse().find((button) => button.contains(point));
+      if (hit !== undefined) {
+        this.act(hit.action);
+      }
+    });
+    document.addEventListener("keydown", (event) => this.onKey(event));
+    window.addEventListener("hashchange", () => this.route());
+  }
 
-    const tick = (now: number): void => {
-      if (this.current.usesCamera && !reading && video.currentTime !== lastFrameTime) {
-        lastFrameTime = video.currentTime;
-        hand = tracker.detect(video, now);
-        fpsText.textContent = `${Math.round(fps.tick(now))} fps`;
-        reading = true;
-        const screen = this.current;
-        live
-          .read(now, hand)
-          .then((result) => {
-            if (screen === this.current) {
-              screen.update(result, now);
-            }
-          })
-          .catch((error: unknown) => showStatus(`Error al reconocer: ${String(error)}`))
-          .finally(() => {
-            reading = false;
-          });
-      }
-      const frame = tracker.mirroredFrame;
-      if (canvas.width !== frame.width || canvas.height !== frame.height) {
-        canvas.width = frame.width;
-        canvas.height = frame.height;
-      }
-      context.drawImage(frame, 0, 0);
-      if (hand !== null) {
-        drawHand(context, hand, HAND_COLOR, Math.max(2, canvas.width / 200));
-      }
-      requestAnimationFrame(tick);
+  start(): void {
+    this.route();
+    requestAnimationFrame((now) => this.tick(now));
+  }
+
+  private get shown(): CanvasScreen {
+    return this.current.usesCamera && this.cameraState !== "on" ? this.cameraScreen : this.current;
+  }
+
+  private setStatus(message: string, failed = false): void {
+    this.cameraScreen.status = message;
+    this.cameraScreen.failed = failed;
+  }
+
+  private toBoard(event: MouseEvent): Point2 {
+    const bounds = this.canvas.getBoundingClientRect();
+    return [
+      ((event.clientX - bounds.left) * WIDTH) / bounds.width,
+      ((event.clientY - bounds.top) * HEIGHT) / bounds.height,
+    ];
+  }
+
+  private route(): void {
+    const name = window.location.hash.replace("#", "") || "menu";
+    const next = this.screens.get(name) ?? this.screens.get("menu")!;
+    this.live?.reset();
+    this.latest = null;
+    this.pending = [];
+    this.current = next;
+    next.enter(this.makeContext(performance.now()));
+  }
+
+  private go(name: string): void {
+    window.location.hash = name === "menu" ? "" : name;
+    if (name === "menu" && window.location.hash === "") {
+      this.route();
+    }
+  }
+
+  private act(action: string): void {
+    if (action === "activar") {
+      void this.startCamera();
+      return;
+    }
+    const target = this.shown.handle(action, this.makeContext(performance.now()));
+    if (target !== null && this.screens.has(target)) {
+      this.go(target);
+    }
+  }
+
+  private onKey(event: KeyboardEvent): void {
+    if (event.altKey || event.ctrlKey || event.metaKey) {
+      return;
+    }
+    const action = this.shown.keyAction(event.key) ?? SCREEN_KEYS[event.key] ?? null;
+    if (action !== null) {
+      event.preventDefault();
+      this.act(action);
+    } else if (event.key === FPS_KEY) {
+      this.showFps = !this.showFps;
+    }
+  }
+
+  private async startCamera(): Promise<void> {
+    if (this.cameraState !== "off") {
+      return;
+    }
+    this.cameraState = "starting";
+    try {
+      this.setStatus("Pidiendo permiso para usar la cámara…");
+      this.video.srcObject = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
+        audio: false,
+      });
+      await this.video.play();
+      this.setStatus("Cargando los modelos…");
+      [this.tracker, this.live] = await this.models;
+      this.cameraState = "on";
+    } catch (error) {
+      this.cameraState = "off";
+      this.setStatus(
+        error instanceof DOMException && error.name === "NotAllowedError"
+          ? "Sin permiso para usar la cámara. Actívalo en el navegador y vuelve a intentarlo."
+          : `No he podido abrir la cámara: ${String(error)}`,
+        true,
+      );
+    }
+  }
+
+  private makeContext(nowMs: number): Context {
+    const cameraOn = this.cameraState === "on" && this.tracker !== null;
+    const reading =
+      this.latest === null ? null : { ...this.latest, confirmed: this.pending.splice(0) };
+    return {
+      nowMs,
+      frame: cameraOn ? this.tracker!.mirroredFrame : null,
+      reading,
+      mouse: this.mouse,
+      references: this.references,
+      progress: this.progress,
     };
-    requestAnimationFrame(tick);
+  }
+
+  private readFrame(nowMs: number): void {
+    const tracker = this.tracker;
+    const live = this.live;
+    if (tracker === null || live === null || this.reading) {
+      return;
+    }
+    if (this.video.currentTime === this.lastFrameTime) {
+      return;
+    }
+    this.lastFrameTime = this.video.currentTime;
+    const hand = tracker.detect(this.video, nowMs);
+    this.fps.tick(nowMs);
+    this.reading = true;
+    const screen = this.current;
+    live
+      .read(nowMs, hand)
+      .then((result) => {
+        if (screen === this.current) {
+          this.latest = result;
+          this.pending.push(...result.confirmed);
+        }
+      })
+      .catch((error: unknown) => this.setStatus(`Error al reconocer: ${String(error)}`, true))
+      .finally(() => {
+        this.reading = false;
+      });
+  }
+
+  private tick(nowMs: number): void {
+    if (this.current.usesCamera && this.cameraState === "on") {
+      this.readFrame(nowMs);
+    }
+    const screen = this.shown;
+    const context = this.makeContext(nowMs);
+    screen.update(context);
+    this.context.drawImage(this.background, 0, 0);
+    this.chalk.clear();
+    const buttons = screen.draw(this.context, this.chalk, context);
+    if (this.showFps && context.frame !== null) {
+      this.chalk.text(`${Math.round(this.fps.fps)} fps`, FPS_ORIGIN, 0.6, DIM, 1, "sans", "right");
+    }
+    this.chalk.apply(this.context);
+    buttons.push(...drawTray(this.context, this.current.trayActive, this.mouse));
+    this.buttons = buttons;
+    requestAnimationFrame((now) => this.tick(now));
   }
 }
 
 async function main(): Promise<void> {
   const models = loadModels();
-  models.then(
-    () => showStatus("Listo. Activa la cámara para empezar."),
-    (error: unknown) => showStatus(`No he podido cargar los modelos: ${String(error)}`),
-  );
+  const [references] = await Promise.all([
+    fetchJson<ReferenceHands>("reference_hands.json"),
+    loadFonts(),
+  ]);
   const progress = Progress.load(browserStore());
-  const references = await fetchJson<ReferenceHands>("reference_hands.json");
-  const screens: Screen[] = [
-    new MenuScreen(references, progress),
-    new LearnScreen(references, progress),
-    new RecognizeScreen(),
-    new PlayScreen(references, progress),
-  ];
-  const app = new App(new Map(screens.map((screen) => [screen.name, screen])));
-  window.addEventListener("hashchange", () => app.route());
-  document.addEventListener("keydown", (event) => app.handleKey(event));
-  app.route();
-
-  startButton.addEventListener("click", async () => {
-    startButton.disabled = true;
-    try {
-      showStatus("Pidiendo permiso para usar la cámara…");
-      await openCamera();
-      showStatus("Cargando los modelos…");
-      const [tracker, live] = await models;
-      cameraGate.hidden = true;
-      app.run(tracker, live);
-    } catch (error) {
-      startButton.disabled = false;
-      showStatus(
-        error instanceof DOMException && error.name === "NotAllowedError"
-          ? "Sin permiso para usar la cámara. Actívalo en el navegador y vuelve a intentarlo."
-          : `No he podido abrir la cámara: ${String(error)}`,
-      );
-    }
-  });
+  const screens = new Map<string, CanvasScreen>([
+    ["menu", new MenuScreen()],
+    ["aprender", new LearnScreen()],
+    ["reconocer", new RecognizeScreen()],
+    ["jugar", new PlayScreen()],
+  ]);
+  new App(
+    element<HTMLCanvasElement>("board"),
+    element<HTMLVideoElement>("video"),
+    screens,
+    models,
+    references,
+    progress,
+  ).start();
 }
 
-main().catch((error: unknown) => showStatus(`No he podido arrancar: ${String(error)}`));
+main().catch((error: unknown) => {
+  document.body.textContent = `No he podido arrancar Dactilograph: ${String(error)}`;
+});

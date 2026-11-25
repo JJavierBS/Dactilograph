@@ -10,140 +10,15 @@
     />
   </head>
   <body>
-    <header class="topbar">
-      <a class="brand" href="#">Dactilograph</a>
-      <nav class="tray">
-        <a href="#" data-screen="menu">Menú <kbd>Esc</kbd></a>
-        <a href="#aprender" data-screen="aprender">Aprender <kbd>1</kbd></a>
-        <a href="#reconocer" data-screen="reconocer">Reconocer <kbd>2</kbd></a>
-        <a href="#jugar" data-screen="jugar">Jugar <kbd>3</kbd></a>
-      </nav>
-    </header>
-
     <main>
-      <section id="screen-menu" class="screen menu">
-        <div class="menu-intro">
-          <h1>Dactilograph</h1>
-          <p class="subtitle">el alfabeto dactilológico de la LSE, con tu mano</p>
-          <ol class="options">
-            <li>
-              <a href="#aprender" class="option learn-option">
-                <span class="option-key">1</span>
-                <span class="option-name">Aprender</span>
-                <span class="option-note">las 30 letras, una a una</span>
-              </a>
-            </li>
-            <li>
-              <a href="#reconocer" class="option">
-                <span class="option-key">2</span>
-                <span class="option-name">Reconocer</span>
-                <span class="option-note">haz letras y mira cuál ve</span>
-              </a>
-            </li>
-            <li>
-              <a href="#jugar" class="option play-option">
-                <span class="option-key">3</span>
-                <span class="option-name">Jugar</span>
-                <span class="option-note">explota burbujas signando</span>
-              </a>
-            </li>
-          </ol>
-          <p class="privacy">La cámara no sale de tu ordenador: todo se calcula en el navegador.</p>
-        </div>
-        <figure class="showcase">
-          <canvas id="showcase" width="360" height="360"></canvas>
-          <figcaption id="showcase-letter" class="showcase-letter"></figcaption>
-          <p id="learned-count" class="learned-count"></p>
-        </figure>
-      </section>
-
-      <section id="screen-aprender" class="screen" hidden>
-        <div class="guide-bar">
-          <ol id="guide" class="guide"></ol>
-          <p id="guide-count" class="guide-count"></p>
-        </div>
-        <div class="learn">
-          <div class="target">
-            <p id="target-letter" class="letter"></p>
-            <p id="target-kind" class="kind"></p>
-            <canvas id="reference" width="220" height="220"></canvas>
-            <p id="target-note" class="label"></p>
-          </div>
-          <div class="camera-slot"></div>
-          <div class="verdict">
-            <div id="learn-reading">
-              <p class="label">veo</p>
-              <p id="learn-letter" class="letter small-letter">–</p>
-              <p id="learn-confidence" class="confidence"></p>
-            </div>
-            <p id="learn-success" class="success" hidden>¡Bien!</p>
-            <div class="learn-buttons">
-              <button id="previous" type="button" class="quiet">anterior <kbd>←</kbd></button>
-              <button id="next" type="button">siguiente <kbd>espacio</kbd></button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="screen-reconocer" class="screen" hidden>
-        <h2 class="screen-title">Haz cualquier letra delante de la cámara</h2>
-        <div class="stage">
-          <div class="camera-slot"></div>
-          <div class="verdict">
-            <p class="label">veo</p>
-            <p id="letter" class="letter">–</p>
-            <p id="confidence" class="confidence">seguridad</p>
-            <p class="label history-label">lo último que has hecho</p>
-            <ol id="history" class="history"></ol>
-          </div>
-        </div>
-      </section>
-
-      <section id="screen-jugar" class="screen" hidden>
-        <div class="play">
-          <div class="play-side">
-            <p class="score-line">Puntos <span id="score">0</span></p>
-            <p class="score-line">Nivel <span id="level">1</span></p>
-            <p id="record" class="label"></p>
-            <div id="help" class="help" hidden>
-              <p class="label">así se hace la</p>
-              <p id="help-letter" class="help-letter"></p>
-              <p id="help-kind" class="label"></p>
-              <canvas id="help-hand" width="170" height="170"></canvas>
-            </div>
-          </div>
-          <div class="arena">
-            <div class="camera-slot"></div>
-            <canvas id="bubbles" class="bubbles"></canvas>
-            <div id="game-over" class="game-over" hidden>
-              <p class="over-title">Fin de la partida</p>
-              <p id="final-score" class="final-score"></p>
-              <p id="new-record" class="new-record" hidden>¡nuevo récord!</p>
-              <div class="over-buttons">
-                <button id="again" type="button" class="emphasized">otra partida <kbd>r</kbd></button>
-                <a class="button-link" href="#">menú <kbd>Esc</kbd></a>
-              </div>
-            </div>
-          </div>
-          <div class="play-side play-right">
-            <p class="label">vidas</p>
-            <p id="lives" class="lives"></p>
-            <p class="label">haces</p>
-            <p id="doing" class="letter small-letter">–</p>
-          </div>
-        </div>
-      </section>
-
-      <div id="camera" class="camera">
-        <canvas id="view" width="640" height="480"></canvas>
-        <p id="fps" class="fps" hidden></p>
-        <div id="camera-gate" class="camera-gate">
-          <p id="status" class="status">Cargando los modelos…</p>
-          <button id="start" type="button">Activar la cámara</button>
-        </div>
-      </div>
-      <video id="video" playsinline muted></video>
+      <canvas
+        id="board"
+        width="1280"
+        height="720"
+        aria-label="Dactilograph: aprende, reconoce y practica el alfabeto dactilológico de la LSE con tu webcam"
+      ></canvas>
     </main>
+    <video id="video" playsinline muted></video>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
