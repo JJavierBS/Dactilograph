@@ -16,11 +16,16 @@
         <p>El alfabeto dactilológico de la LSE, con tu mano. La cámara no sale de tu ordenador.</p>
       </header>
       <section class="stage">
-        <canvas id="view" width="640" height="480"></canvas>
+        <div class="camera">
+          <canvas id="view" width="640" height="480"></canvas>
+          <p id="fps" class="fps" hidden></p>
+        </div>
         <aside class="verdict">
           <p class="label">veo</p>
           <p id="letter" class="letter">–</p>
           <p id="confidence" class="confidence">seguridad</p>
+          <p class="label history-label">lo último que has hecho</p>
+          <ol id="history" class="history"></ol>
         </aside>
       </section>
       <p id="status" class="status">Cargando los modelos…</p>

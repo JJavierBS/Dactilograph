@@ -47,6 +47,19 @@ canvas {
   border-radius: 4px;
 }
 
+.camera {
+  position: relative;
+}
+
+.fps {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  margin: 0;
+  color: var(--dim);
+  font-size: 0.9rem;
+}
+
 .verdict {
   text-align: center;
 }
@@ -60,6 +73,27 @@ canvas {
   font-style: italic;
   font-weight: 700;
   line-height: 1.1;
+}
+
+.verdict .history-label {
+  margin-top: 32px;
+}
+
+.history {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  min-height: 3rem;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 2rem;
+  font-style: italic;
+  font-weight: 700;
+}
+
+.history .newest {
+  color: var(--yellow);
 }
 
 button {

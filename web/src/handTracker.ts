@@ -7,6 +7,17 @@ export const HAND_MODEL_URL =
   "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/" +
   "float16/latest/hand_landmarker.task";
 
+function createLandmarker(delegate: "GPU" | "CPU"): Promise<HandLandmarker> {
+  return HandLandmarker.createFromOptions(
+    { wasmLoaderPath: wasmLoaderUrl, wasmBinaryPath: wasmBinaryUrl },
+    {
+      baseOptions: { modelAssetPath: HAND_MODEL_URL, delegate },
+      runningMode: "VIDEO",
+      numHands: 1,
+    },
+  );
+}
+
 const MIRRORED_HANDEDNESS: Record<string, Handedness> = { Left: "Right", Right: "Left" };
 
 export class HandTracker {
@@ -24,15 +35,11 @@ export class HandTracker {
   }
 
   static async create(): Promise<HandTracker> {
-    const landmarker = await HandLandmarker.createFromOptions(
-      { wasmLoaderPath: wasmLoaderUrl, wasmBinaryPath: wasmBinaryUrl },
-      {
-        baseOptions: { modelAssetPath: HAND_MODEL_URL, delegate: "GPU" },
-        runningMode: "VIDEO",
-        numHands: 1,
-      },
-    );
-    return new HandTracker(landmarker);
+    try {
+      return new HandTracker(await createLandmarker("GPU"));
+    } catch {
+      return new HandTracker(await createLandmarker("CPU"));
+    }
   }
 
   get mirroredFrame(): HTMLCanvasElement {
