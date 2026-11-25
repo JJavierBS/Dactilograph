@@ -120,6 +120,8 @@ La versión web está en `web/` y necesita Node.js:
 ```bash
 cd web
 npm install              # instala las dependencias
+npm run dev              # abre la web en local con recarga automática
+npm run build            # genera la web publicable en web/dist/
 npm test                 # tests, que comparan los cálculos con los de Python
 npm run typecheck        # comprobación de tipos
 ```
