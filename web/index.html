@@ -3,11 +3,96 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dactilograph</title>
+    <title>Dactilograph · Aprende el alfabeto dactilológico de la LSE con tu webcam</title>
     <meta
       name="description"
-      content="Aprende el alfabeto dactilológico de la Lengua de Signos Española con tu webcam."
+      content="Aprende y practica gratis el alfabeto dactilológico de la Lengua de Signos Española (LSE) con tu webcam: la web reconoce tu mano en tiempo real, sin instalar nada y sin que el vídeo salga de tu ordenador."
     />
+    <link rel="canonical" href="https://dactilograph.josejavierbravo.com/" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#21352d" />
+    <meta name="author" content="José Javier Bravo" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="es_ES" />
+    <meta property="og:site_name" content="Dactilograph" />
+    <meta property="og:url" content="https://dactilograph.josejavierbravo.com/" />
+    <meta
+      property="og:title"
+      content="Dactilograph · Aprende el alfabeto dactilológico de la LSE"
+    />
+    <meta
+      property="og:description"
+      content="Haz las letras de la Lengua de Signos Española delante de la webcam y la web las reconoce al momento. Aprende, practica y juega."
+    />
+    <meta property="og:image" content="https://dactilograph.josejavierbravo.com/og.jpg" />
+    <meta property="og:image:width" content="1280" />
+    <meta property="og:image:height" content="719" />
+    <meta
+      property="og:image:alt"
+      content="Menú de Dactilograph dibujado con tiza sobre una pizarra"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Dactilograph",
+        "url": "https://dactilograph.josejavierbravo.com/",
+        "description": "Aprende el alfabeto dactilológico de la Lengua de Signos Española (LSE) con tu webcam: reconocimiento de la mano en tiempo real en el navegador.",
+        "inLanguage": "es",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Cualquiera con un navegador moderno y webcam",
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+        "image": "https://dactilograph.josejavierbravo.com/og.jpg",
+        "author": {
+          "@type": "Person",
+          "name": "José Javier Bravo",
+          "url": "https://josejavierbravo.com"
+        },
+        "sameAs": ["https://github.com/JJavierBS/Dactilograph"]
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "¿Tengo que instalar algo?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. Basta con un navegador moderno y una webcam. La primera vez se descargan los modelos y después funciona en el propio navegador."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "¿Se envía mi vídeo a algún servidor?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. La detección de la mano y el reconocimiento de las letras se hacen en tu ordenador. La imagen de la cámara nunca sale de él y tu progreso se guarda solo en tu navegador."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "¿Qué letras reconoce?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Las 30 letras del alfabeto dactilológico de la LSE, tanto las estáticas como las que llevan movimiento, como la J, la Z o la LL."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "¿Puedo ayudar a mejorarla?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Sí. Si conoces la lengua de signos puedes revisar los gestos y grabar tus propios ejemplos. Escríbenos desde el formulario de colaboración de la página."
+            }
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <main>
@@ -17,8 +102,132 @@
         height="720"
         aria-label="Dactilograph: aprende, reconoce y practica el alfabeto dactilológico de la LSE con tu webcam"
       ></canvas>
+      <noscript>Dactilograph necesita JavaScript para usar la webcam y reconocer tu mano.</noscript>
     </main>
     <video id="video" playsinline muted></video>
+
+    <article class="page">
+      <header>
+        <h1>Aprende el alfabeto dactilológico de la LSE con tu webcam</h1>
+        <p class="lead">
+          Dactilograph reconoce en tiempo real la letra que haces con la mano. Practica las 30
+          letras del alfabeto dactilológico de la Lengua de Signos Española, gratis y sin instalar
+          nada.
+        </p>
+      </header>
+
+      <section>
+        <h2>Tres formas de practicar</h2>
+        <ul class="modes">
+          <li>
+            <h3>Aprender</h3>
+            <p>
+              Recorre las letras una a una con una mano de referencia y comprueba si la haces bien.
+            </p>
+          </li>
+          <li>
+            <h3>Reconocer</h3>
+            <p>Haz cualquier letra delante de la cámara y mira cuál ve y con cuánta seguridad.</p>
+          </li>
+          <li>
+            <h3>Jugar</h3>
+            <p>Explota las burbujas haciendo su letra antes de que lleguen arriba.</p>
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Cómo funciona</h2>
+        <p>
+          MediaPipe localiza 21 puntos de tu mano en cada fotograma. Las letras estáticas se
+          reconocen con una máquina de vectores de soporte (SVM) y las que llevan movimiento, como
+          la J, la Z o la LL, comparando la trayectoria de la mano con ejemplos grabados (k vecinos
+          más cercanos). Todo se ejecuta en tu navegador: la imagen de la cámara no sale de tu
+          ordenador.
+        </p>
+      </section>
+
+      <section>
+        <h2>Preguntas frecuentes</h2>
+        <details>
+          <summary>¿Tengo que instalar algo?</summary>
+          <p>
+            No. Basta con un navegador moderno y una webcam. La primera vez se descargan los modelos
+            y después funciona en el propio navegador.
+          </p>
+        </details>
+        <details>
+          <summary>¿Se envía mi vídeo a algún servidor?</summary>
+          <p>
+            No. La detección de la mano y el reconocimiento de las letras se hacen en tu ordenador.
+            La imagen de la cámara nunca sale de él y tu progreso se guarda solo en tu navegador.
+          </p>
+        </details>
+        <details>
+          <summary>¿Qué letras reconoce?</summary>
+          <p>
+            Las 30 letras del alfabeto dactilológico de la LSE, tanto las estáticas como las que
+            llevan movimiento, como la J, la Z o la LL.
+          </p>
+        </details>
+        <details>
+          <summary>¿Puedo ayudar a mejorarla?</summary>
+          <p>
+            Sí. Si conoces la lengua de signos puedes revisar los gestos y grabar tus propios
+            ejemplos. Escríbenos desde el formulario de abajo.
+          </p>
+        </details>
+      </section>
+
+      <section id="colabora" class="collaborate">
+        <h2>¿Conoces la lengua de signos? Ayúdanos a mejorar</h2>
+        <p>
+          Dactilograph lo ha hecho alguien que está aprendiendo, no un experto, y los ejemplos con
+          los que se entrenó pueden tener gestos mal hechos. Si eres una persona signante,
+          intérprete o docente de LSE, tu ayuda vale mucho: puedes decirnos qué letras están mal y,
+          si te apetece, grabar tus propios ejemplos con la aplicación de escritorio para que el
+          reconocimiento aprenda de gestos correctos.
+        </p>
+        <form id="colabora-form">
+          <label>
+            Nombre
+            <input name="nombre" autocomplete="name" />
+          </label>
+          <label>
+            Tu relación con la LSE
+            <select name="perfil">
+              <option>Persona sorda o signante</option>
+              <option>Intérprete de LSE</option>
+              <option>Docente de LSE</option>
+              <option>Estudiante de LSE</option>
+              <option>Otra</option>
+            </select>
+          </label>
+          <label>
+            Letras que crees que están mal (opcional)
+            <input name="letras" placeholder="Por ejemplo: Ñ, RR" />
+          </label>
+          <label>
+            Comentarios (opcional)
+            <textarea name="mensaje" rows="4"></textarea>
+          </label>
+          <button type="submit">Preparar el correo</button>
+          <p class="hint">
+            Se abrirá tu programa de correo con el mensaje ya escrito para que lo revises y lo
+            envíes. También puedes escribir directamente a
+            <a href="mailto:josejavierbravosarabia@gmail.com">josejavierbravosarabia@gmail.com</a>.
+          </p>
+        </form>
+      </section>
+
+      <footer>
+        <p>
+          Dactilograph es código abierto:
+          <a href="https://github.com/JJavierBS/Dactilograph">github.com/JJavierBS/Dactilograph</a>.
+          Hecho por <a href="https://josejavierbravo.com">José Javier Bravo</a>.
+        </p>
+      </footer>
+    </article>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

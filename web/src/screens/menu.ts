@@ -1,4 +1,5 @@
 import { ALPHABET, isDynamic } from "../alphabet";
+import { COLLABORATE_ACTION } from "../collaborate";
 import { BLUE, type Chalk, type Color, DIM, fitHand, PINK, WHITE, YELLOW } from "../chalk";
 import { Button, type CanvasScreen, type Context, letterScale, ringProgress } from "../ui";
 
@@ -17,6 +18,8 @@ const OPTION_STEP = 95;
 const SHOWCASE_MS = 1600;
 const SHOWCASE_TOP_LEFT = [850, 110] as const;
 const SHOWCASE_SIZE = 360;
+const COLLABORATE_ORIGIN = [100, 628] as const;
+const COLLABORATE_LABEL = "¿Conoces la LSE? Ayúdanos a mejorar los gestos";
 
 export class MenuScreen implements CanvasScreen {
   readonly trayActive = "menu";
@@ -64,6 +67,7 @@ export class MenuScreen implements CanvasScreen {
       }
     });
 
+    buttons.push(this.drawCollaborate(chalk, context));
     this.drawShowcase(chalk, context);
     const learned = ALPHABET.filter((letter) => context.progress.learned.has(letter)).length;
     chalk.text(
@@ -85,6 +89,16 @@ export class MenuScreen implements CanvasScreen {
       "right",
     );
     return buttons;
+  }
+
+  private drawCollaborate(chalk: Chalk, context: Context): Button {
+    const [x, y] = COLLABORATE_ORIGIN;
+    const [width, height] = chalk.size(COLLABORATE_LABEL, 0.7, 1);
+    const button = new Button(x - 10, y - height - 12, width + 20, height + 24, COLLABORATE_ACTION);
+    const color = button.contains(context.mouse) ? YELLOW : DIM;
+    chalk.text(COLLABORATE_LABEL, [x, y], 0.7, color, 1);
+    chalk.line([x, y + 8], [x + width, y + 10], color, 1);
+    return button;
   }
 
   private drawShowcase(chalk: Chalk, context: Context): void {
